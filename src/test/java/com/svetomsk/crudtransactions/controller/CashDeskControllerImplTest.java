@@ -2,6 +2,7 @@ package com.svetomsk.crudtransactions.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.svetomsk.crudtransactions.Utils;
+import com.svetomsk.crudtransactions.controller.implementation.CashDeskControllerImpl;
 import com.svetomsk.crudtransactions.dto.CashDeskDto;
 import com.svetomsk.crudtransactions.service.interfaces.CashDeskService;
 import lombok.extern.slf4j.Slf4j;
@@ -15,7 +16,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.RequestBuilder;
 import org.springframework.test.web.servlet.ResultActions;
 
-import java.sql.Array;
 import java.util.ArrayList;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;

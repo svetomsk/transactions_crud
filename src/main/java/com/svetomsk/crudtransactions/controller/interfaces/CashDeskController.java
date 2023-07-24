@@ -1,4 +1,4 @@
-package com.svetomsk.crudtransactions.controller;
+package com.svetomsk.crudtransactions.controller.interfaces;
 
 import com.svetomsk.crudtransactions.dto.CashDeskDto;
 import jakarta.validation.Valid;
