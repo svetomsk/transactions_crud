@@ -26,4 +26,9 @@ public class CashDeskControllerImpl implements CashDeskController {
     public ResponseEntity<List<CashDeskDto>> getAllCashDesks() {
         return new ResponseEntity<>(cashDeskService.getCashDesks(), HttpStatus.OK);
     }
+
+    @Override
+    public ResponseEntity<CashDeskDto> getCashDesk(Long cashDeskId) {
+        return new ResponseEntity<>(cashDeskService.getCashDeskById(cashDeskId), HttpStatus.OK);
+    }
 }
