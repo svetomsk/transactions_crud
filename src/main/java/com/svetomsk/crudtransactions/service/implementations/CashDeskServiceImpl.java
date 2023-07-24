@@ -7,6 +7,8 @@ import com.svetomsk.crudtransactions.service.interfaces.CashDeskService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class CashDeskServiceImpl implements CashDeskService {
@@ -17,12 +19,12 @@ public class CashDeskServiceImpl implements CashDeskService {
     }
 
     @Override
-    public CashDeskDto getCashDesks() {
-        return null;
+    public List<CashDeskDto> getCashDesks() {
+        return cashDeskDao.findAllCashDesks();
     }
 
     @Override
-    public CashDeskDto getCashDeskById() {
-        return null;
+    public CashDeskDto getCashDeskById(Long id) {
+        return cashDeskDao.findById(id);
     }
 }

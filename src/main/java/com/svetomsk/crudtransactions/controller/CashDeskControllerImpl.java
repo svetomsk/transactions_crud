@@ -10,6 +10,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
+
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/cashDesk")
@@ -18,5 +20,10 @@ public class CashDeskControllerImpl implements CashDeskController {
     @Override
     public ResponseEntity<CashDeskDto> createCashDesk(@RequestBody @Valid CashDeskDto request) {
         return new ResponseEntity<>(cashDeskService.createCashDesk(request), HttpStatus.CREATED);
+    }
+
+    @Override
+    public ResponseEntity<List<CashDeskDto>> getAllCashDesks() {
+        return new ResponseEntity<>(cashDeskService.getCashDesks(), HttpStatus.OK);
     }
 }

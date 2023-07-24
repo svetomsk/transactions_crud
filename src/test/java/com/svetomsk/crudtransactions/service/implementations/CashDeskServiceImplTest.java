@@ -8,6 +8,9 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.sql.Array;
+import java.util.ArrayList;
+
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
@@ -27,6 +30,27 @@ public class CashDeskServiceImplTest {
         var actual = service.createCashDesk(dto);
         assertEquals(expected, actual);
         verify(cashDeskDao, times(1)).save(dto);
+    }
+
+    @Test
+    public void getCashDesks_validRequest_daoObjectCalled() {
+        var expected = new ArrayList<CashDeskDto>();
+        expected.add(new CashDeskDto(1L, 10.0));
+        expected.add(new CashDeskDto(2L, 20.0));
+        expected.add(new CashDeskDto(3L, 30.0));
+        when(cashDeskDao.findAllCashDesks()).thenReturn(expected);
+        var actual = service.getCashDesks();
+        assertEquals(expected, actual);
+        verify(cashDeskDao, times(1)).findAllCashDesks();
+    }
+
+    @Test
+    public void getCashDeskById_validRequest_daoObjectCalled() {
+        var expected = new CashDeskDto(1L, 10.0);
+        when(cashDeskDao.findById(any())).thenReturn(expected);
+        var actual = service.getCashDeskById(1L);
+        assertEquals(expected, actual);
+        verify(cashDeskDao, times(1)).findById(any());
     }
 
 }
