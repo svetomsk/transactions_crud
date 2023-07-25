@@ -5,10 +5,13 @@ import com.svetomsk.crudtransactions.dto.TransferCodeDto;
 import com.svetomsk.crudtransactions.dto.TransferDto;
 import com.svetomsk.crudtransactions.model.CreateTransferRequest;
 import com.svetomsk.crudtransactions.model.IssueTransferRequest;
+import com.svetomsk.crudtransactions.model.ListTransfersRequest;
 import com.svetomsk.crudtransactions.service.interfaces.TransferService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/transfer")
@@ -24,5 +27,10 @@ public class TransferControllerImpl implements TransferController {
     @Override
     public TransferDto issueTransfer(IssueTransferRequest request) {
         return transferService.issueTransfer(request);
+    }
+
+    @Override
+    public List<TransferDto> listTransfers(ListTransfersRequest request) {
+        return transferService.listTransfers(request);
     }
 }

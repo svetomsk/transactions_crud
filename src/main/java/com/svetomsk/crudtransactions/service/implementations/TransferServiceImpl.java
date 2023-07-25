@@ -14,11 +14,22 @@ import com.svetomsk.crudtransactions.entity.UserEntity;
 import com.svetomsk.crudtransactions.enums.TransferStatus;
 import com.svetomsk.crudtransactions.model.CreateTransferRequest;
 import com.svetomsk.crudtransactions.model.IssueTransferRequest;
+import com.svetomsk.crudtransactions.model.ListTransfersRequest;
 import com.svetomsk.crudtransactions.service.interfaces.TransferService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import static com.svetomsk.crudtransactions.repository.TransferSpecifications.*;
 
 @Slf4j
 @Service
@@ -89,5 +100,25 @@ public class TransferServiceImpl implements TransferService {
         // update transfer status
         transfer.setStatus(TransferStatus.FINISHED);
         return TransferDto.entityToDto(transferDao.saveTransfer(transfer));
+    }
+
+    @Override
+    public List<TransferDto> listTransfers(ListTransfersRequest request) {
+        Sort sort = Sort.by(request.getOrder(), request.getSortBy().getColumn());
+        Pageable pageable = PageRequest.of(request.getPageNumber(), request.getPageSize(), sort);
+        List<Specification<TransferEntity>> predicates = new ArrayList<>();
+        if (request.getSender() != null) {
+            predicates.add(senderPredicate(request.getSender().getPhoneNumber()));
+        }
+        if (request.getReceiver() != null) {
+            predicates.add(receiverPredicate(request.getReceiver().getPhoneNumber()));
+        }
+        if (request.getStatus() != null) {
+            predicates.add(statusPredicate(request.getStatus()));
+        }
+        Specification<TransferEntity> unitedPredicates = createComplexPredicate(predicates);
+        return transferDao.findAll(unitedPredicates, pageable).stream()
+                .map(TransferDto::entityToDto)
+                .collect(Collectors.toList());
     }
 }
