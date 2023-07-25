@@ -29,9 +29,22 @@ public class CashDeskDao {
                 .collect(Collectors.toList());
     }
 
-    public CashDeskDto findById(Long id) {
-        var entity = repository.findById(id).orElseThrow(
+    public CashDeskEntity findEntityById(Long id) {
+        return repository.findById(id).orElseThrow(
                 () -> new NoSuchElementException("Desk with id " + id + " is not found"));
-        return CashDeskDto.entityToDto(entity);
+    }
+
+    public CashDeskDto findById(Long id) {
+        return CashDeskDto.entityToDto(findEntityById(id));
+    }
+
+    public void withdraw(CashDeskEntity entity, double amount) {
+        entity.setBalance(entity.getBalance() - amount);
+        repository.save(entity);
+    }
+
+    public void deposit(CashDeskEntity entity, Double amount) {
+        entity.setBalance(entity.getBalance() + amount);
+        repository.save(entity);
     }
 }

@@ -31,4 +31,7 @@ public class CashDeskEntity {
     private LocalDateTime updatedAt;
 
     private boolean enabled = true;
+
+    @Version
+    private long version;
 }
