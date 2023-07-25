@@ -7,6 +7,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
+import java.util.Optional;
+
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -14,8 +16,8 @@ public class UserDao {
     private final UserRepository repository;
 
     public UserEntity findByInfoOrCreate(UserDto userDto) {
-        return repository.findByPhone(userDto.getPhoneNumber())
-                .orElse(createNewUsers(userDto));
+        Optional<UserEntity> maybeUser = repository.findByPhone(userDto.getPhoneNumber());
+        return maybeUser.orElseGet(() -> createNewUsers(userDto));
     }
 
     private UserEntity createNewUsers(UserDto userDto) {

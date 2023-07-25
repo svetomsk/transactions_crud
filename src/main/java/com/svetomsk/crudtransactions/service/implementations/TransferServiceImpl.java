@@ -61,6 +61,7 @@ public class TransferServiceImpl implements TransferService {
     }
 
     @Override
+    @Transactional
     public TransferDto issueTransfer(IssueTransferRequest request) {
         String code = request.getSecretCode();
         UserDto issuer = request.getIssuer();
@@ -71,6 +72,9 @@ public class TransferServiceImpl implements TransferService {
 
         // check data equality
         TransferEntity transfer = codeEntity.getTransfer();
+        if (transfer.getStatus() == TransferStatus.FINISHED) {
+            throw new IllegalArgumentException("Duplicate issue for transfer is not allowed");
+        }
         UserEntity receiver = transfer.getReceiver();
         if (!receiver.getName().equals(issuer.getName()) ||
                 !receiver.getPhone().equals(issuer.getPhoneNumber())) {
