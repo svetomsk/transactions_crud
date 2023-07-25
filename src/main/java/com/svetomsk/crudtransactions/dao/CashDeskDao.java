@@ -4,12 +4,14 @@ import com.svetomsk.crudtransactions.dto.CashDeskDto;
 import com.svetomsk.crudtransactions.entity.CashDeskEntity;
 import com.svetomsk.crudtransactions.repository.CashDeskRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class CashDeskDao {

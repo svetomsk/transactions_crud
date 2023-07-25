@@ -14,7 +14,7 @@ import java.util.List;
 @PreAuthorize("isAuthenticated()")
 public interface CashDeskController {
     @PostMapping(value = "/create", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    ResponseEntity<CashDeskDto> createCashDesk(@Valid CashDeskDto request);
+    ResponseEntity<CashDeskDto> createCashDesk(@RequestBody @Valid CashDeskDto request);
 
     @GetMapping("/list")
     ResponseEntity<List<CashDeskDto>> getAllCashDesks();
