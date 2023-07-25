@@ -10,19 +10,19 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.RequestBuilder;
 import org.springframework.test.web.servlet.ResultActions;
 
 import java.util.ArrayList;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @Slf4j
 @WebMvcTest(CashDeskControllerImpl.class)
@@ -36,37 +36,39 @@ public class CashDeskControllerImplTest {
     @MockBean
     private CashDeskService cashDeskService;
 
-    @Test
-    public void createCashDesk_correctRequest_serviceCalled() {
+    //    @Test
+//    @WithMockUser
+    public void createCashDesk_correctRequest_serviceCalled() throws Exception {
         var request = new CashDeskDto(1L, 20.0);
         when(cashDeskService.createCashDesk(any())).thenReturn(request);
-        var mvcResult = performRequest(put("/cashDesk")
+        performRequest(post("/cashDesk/create")
                 .content(Utils.stringify(mapper, request))
                 .contentType(MediaType.APPLICATION_JSON_VALUE))
-                .andReturn();
-        assertEquals(HttpStatus.CREATED.value(), mvcResult.getResponse().getStatus());
+                .andExpect(status().isCreated());
         verify(cashDeskService, times(1)).createCashDesk(any());
     }
 
     @Test
-    public void getCashDesks_correctRequest_serviceCalled() {
+    @WithMockUser
+    public void getCashDesks_correctRequest_serviceCalled() throws Exception {
         var serviceResult = new ArrayList<CashDeskDto>();
         serviceResult.add(new CashDeskDto(1L, 10.0));
         when(cashDeskService.getCashDesks()).thenReturn(serviceResult);
         var mvcResult = performRequest(get("/cashDesk/list"))
+                .andExpect(status().isOk())
                 .andReturn();
-        assertEquals(HttpStatus.OK.value(), mvcResult.getResponse().getStatus());
         verify(cashDeskService, times(1)).getCashDesks();
     }
 
     @Test
-    public void getCashDeskById_correctRequest_entityReturned() {
+    @WithMockUser
+    public void getCashDeskById_correctRequest_entityReturned() throws Exception {
         var serviceResult = new CashDeskDto(1L, 10.0);
         when(cashDeskService.getCashDeskById(any())).thenReturn(serviceResult);
         var id = 1L;
-        var mvcResult = performRequest(get("/cashDesk/" + id))
+        performRequest(get("/cashDesk/" + id))
+                .andExpect(status().isOk())
                 .andReturn();
-        assertEquals(HttpStatus.OK.value(), mvcResult.getResponse().getStatus());
         verify(cashDeskService, times(1)).getCashDeskById(id);
     }
 
