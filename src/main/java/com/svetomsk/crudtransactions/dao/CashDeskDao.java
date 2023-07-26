@@ -3,8 +3,10 @@ package com.svetomsk.crudtransactions.dao;
 import com.svetomsk.crudtransactions.dto.CashDeskDto;
 import com.svetomsk.crudtransactions.entity.CashDeskEntity;
 import com.svetomsk.crudtransactions.repository.CashDeskRepository;
+import jakarta.persistence.LockModeType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -31,6 +33,7 @@ public class CashDeskDao {
                 .collect(Collectors.toList());
     }
 
+    @Lock(LockModeType.OPTIMISTIC_FORCE_INCREMENT)
     public CashDeskEntity findEntityById(Long id) {
         return repository.findById(id).orElseThrow(
                 () -> new NoSuchElementException("Desk with id " + id + " is not found"));
