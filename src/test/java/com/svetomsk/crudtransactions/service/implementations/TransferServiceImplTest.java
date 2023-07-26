@@ -5,24 +5,31 @@ import com.svetomsk.crudtransactions.dao.TransferCodeDao;
 import com.svetomsk.crudtransactions.dao.TransferDao;
 import com.svetomsk.crudtransactions.dao.UserDao;
 import com.svetomsk.crudtransactions.dto.TransferCodeDto;
+import com.svetomsk.crudtransactions.dto.TransferDto;
 import com.svetomsk.crudtransactions.dto.UserDto;
 import com.svetomsk.crudtransactions.entity.CashDeskEntity;
 import com.svetomsk.crudtransactions.entity.TransferCodeEntity;
 import com.svetomsk.crudtransactions.entity.TransferEntity;
 import com.svetomsk.crudtransactions.entity.UserEntity;
 import com.svetomsk.crudtransactions.enums.TransferCurrency;
+import com.svetomsk.crudtransactions.enums.TransferOrderParam;
 import com.svetomsk.crudtransactions.enums.TransferStatus;
 import com.svetomsk.crudtransactions.model.CreateTransferRequest;
 import com.svetomsk.crudtransactions.model.IssueTransferRequest;
+import com.svetomsk.crudtransactions.model.ListTransfersRequest;
+import com.svetomsk.crudtransactions.repository.TransferSpecifications;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
+import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import java.util.ArrayList;
+
+import static com.svetomsk.crudtransactions.repository.TransferSpecifications.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -128,4 +135,78 @@ public class TransferServiceImplTest {
         verify(transferDao, times(1)).saveTransfer(transferEntity);
     }
 
+    @Test
+    public void issueTransfer_cashDeskBalanceIsLessThanTransfer_exceptionThrown() {
+        var cashDeskBalance = 100.0;
+        var transferAmount = 120.0;
+        var cashDeskEntity = CashDeskEntity.builder().balance(cashDeskBalance).build();
+        var transferEntity = TransferEntity.builder().amount(transferAmount).cashDesk(cashDeskEntity).build();
+        var codeEntity = TransferCodeEntity.builder().transfer(transferEntity).build();
+        when(cashDeskDao.findEntityById(any())).thenReturn(cashDeskEntity);
+        when(codeDao.findByCode(any())).thenReturn(codeEntity);
+        assertThrows(IllegalArgumentException.class, () -> {
+            transferService.issueTransfer(new IssueTransferRequest(new UserDto(), "code", 1L));
+        });
+    }
+
+    @Test
+    public void issueTransfer_issuerAndReceiverDiffers_exceptionThrown() {
+        var cashDeskBalance = 150.0;
+        var transferAmount = 120.0;
+        var anotherReceiver = new UserEntity(1L, "Another name", "Another phone");
+        var cashDeskEntity = CashDeskEntity.builder().balance(cashDeskBalance).build();
+        var transferEntity = TransferEntity.builder().amount(transferAmount).cashDesk(cashDeskEntity).receiver(anotherReceiver).build();
+        var codeEntity = TransferCodeEntity.builder().transfer(transferEntity).build();
+        when(cashDeskDao.findEntityById(any())).thenReturn(cashDeskEntity);
+        when(codeDao.findByCode(any())).thenReturn(codeEntity);
+        assertThrows(IllegalArgumentException.class, () -> {
+            transferService.issueTransfer(new IssueTransferRequest(receiver, "code", 1L));
+        });
+    }
+
+    @Captor
+    private ArgumentCaptor<ArrayList<Specification<TransferEntity>>> specificationCaptor;
+
+    @Test
+    public void listTransfers_correctRequest_necessaryFiltersApplied() {
+        var pageNumber = 0;
+        var pageSize = 10;
+        var request = ListTransfersRequest.builder()
+                .order(Sort.Direction.DESC)
+                .pageNumber(0)
+                .pageSize(10)
+                .sortBy(TransferOrderParam.SENDER)
+                .receiver(receiver)
+                .sender(sender)
+                .status(TransferStatus.FINISHED)
+                .build();
+        try (MockedStatic<TransferSpecifications> staticMock = mockStatic(TransferSpecifications.class);
+             MockedStatic<TransferDto> dtoMock = mockStatic(TransferDto.class)) {
+            staticMock.when(() -> senderPredicate(any())).thenCallRealMethod();
+            staticMock.when(() -> receiverPredicate(any())).thenCallRealMethod();
+            staticMock.when(() -> statusPredicate(any())).thenCallRealMethod();
+            staticMock.when(() -> createComplexPredicate(anyList())).thenCallRealMethod();
+            dtoMock.when(TransferDto::builder).thenCallRealMethod();
+            dtoMock.when(() -> TransferDto.entityToDto(any()))
+                    .thenAnswer(value -> TransferDto.builder().id(((TransferEntity) value.getArgument(0)).getId()).build());
+            var transferEntities = new ArrayList<TransferEntity>();
+            transferEntities.add(TransferEntity.builder().id(1L).build());
+            transferEntities.add(TransferEntity.builder().id(2L).build());
+            when(transferDao.findAll(any(), any())).thenReturn(transferEntities);
+
+            var actualList = transferService.listTransfers(request);
+            assertEquals(transferEntities.size(), actualList.size());
+
+            staticMock.verify(() -> senderPredicate(sender.getPhoneNumber()), times(1));
+            staticMock.verify(() -> receiverPredicate(receiver.getPhoneNumber()), times(1));
+            staticMock.verify(() -> statusPredicate(TransferStatus.FINISHED), times(1));
+            staticMock.verify(() -> createComplexPredicate(specificationCaptor.capture()), times(1));
+            assertEquals(3, specificationCaptor.getValue().size());
+            var pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
+            verify(transferDao, times(1)).findAll(any(), pageableCaptor.capture());
+            assertEquals(pageNumber, pageableCaptor.getValue().getPageNumber());
+            assertEquals(pageSize, pageableCaptor.getValue().getPageSize());
+            assertEquals(Sort.by(request.getOrder(), request.getSortBy().getColumn()), pageableCaptor.getValue().getSort());
+        }
+    }
 }
