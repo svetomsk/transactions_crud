@@ -15,8 +15,9 @@ import org.springframework.data.domain.Sort;
 @AllArgsConstructor
 @Builder
 public class ListTransfersRequest {
-    @Min(value = 1, message = "Page should be at least 1")
-    private int pageNumber = 1;
+    @Min(value = 0, message = "Page number should be non-negative")
+    private int pageNumber = 0;
+    @Min(value = 1, message = "Page size should be at least 1")
     private int pageSize = 10;
     private TransferOrderParam sortBy = TransferOrderParam.CREATED_AT;
     private Sort.Direction order = Sort.Direction.DESC;

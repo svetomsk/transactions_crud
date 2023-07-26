@@ -17,6 +17,7 @@ public class UserDao {
 
     public UserEntity findByInfoOrCreate(UserDto userDto) {
         Optional<UserEntity> maybeUser = repository.findByPhone(userDto.getPhoneNumber());
+        // TODO: handle concurrent user creation
         return maybeUser.orElseGet(() -> createNewUsers(userDto));
     }
 

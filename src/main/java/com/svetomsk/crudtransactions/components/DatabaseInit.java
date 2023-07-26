@@ -19,7 +19,7 @@ public class DatabaseInit {
     @PostConstruct
     public void createInitialDesks() {
         long cashDeskCount = cashDeskDao.count();
-        for (long i = cashDeskCount; i <= minimumCashDesksCount; i++) {
+        for (long i = cashDeskCount; i < minimumCashDesksCount; i++) {
             log.info("Default cash desk added");
             cashDeskDao.save(CashDeskDto.builder().balance(initialBalance).build());
         }

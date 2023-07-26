@@ -46,7 +46,9 @@ public class TransferServiceImpl implements TransferService {
         UserDto senderDto = request.getSenderInfo();
         UserDto receiverDto = request.getReceiverInfo();
 
+        // update cash desk balance
         CashDeskEntity cashDesk = cashDeskDao.findEntityById(request.getCashDeskId());
+        cashDesk = cashDeskDao.deposit(cashDesk, request.getAmount());
 
         // retrieve or create users
         UserEntity sender = userDao.findByInfoOrCreate(senderDto);
@@ -66,8 +68,6 @@ public class TransferServiceImpl implements TransferService {
         // create code for transfer
         TransferCodeEntity codeEntity = transferCodeDao.createAndSaveCode(sender, transferEntity);
 
-        // update cash desk balance
-        cashDeskDao.deposit(cashDesk, request.getAmount());
         return new TransferCodeDto(codeEntity.getCode());
     }
 
@@ -76,15 +76,11 @@ public class TransferServiceImpl implements TransferService {
     public TransferDto issueTransfer(IssueTransferRequest request) {
         String code = request.getSecretCode();
         UserDto issuer = request.getIssuer();
-        CashDeskEntity cashDesk = cashDeskDao.findEntityById(request.getCashDeskId());
 
         // find code
         TransferCodeEntity codeEntity = transferCodeDao.findByCode(code);
 
         TransferEntity transfer = codeEntity.getTransfer();
-        if (transfer.getAmount() > cashDesk.getBalance()) {
-            throw new IllegalArgumentException("Not enough money to withdraw");
-        }
         if (transfer.getStatus() == TransferStatus.FINISHED) {
             throw new IllegalArgumentException("Duplicate issue for transfer is not allowed");
         }
@@ -100,6 +96,7 @@ public class TransferServiceImpl implements TransferService {
         }
 
         // update cash desk balance
+        CashDeskEntity cashDesk = cashDeskDao.findEntityById(request.getCashDeskId());
         cashDeskDao.withdraw(cashDesk, transfer.getAmount());
 
         // update transfer status
@@ -109,8 +106,11 @@ public class TransferServiceImpl implements TransferService {
 
     @Override
     public List<TransferDto> listTransfers(ListTransfersRequest request) {
+        // create sorting and pageable objects
         Sort sort = Sort.by(request.getOrder(), request.getSortBy().getColumn());
         Pageable pageable = PageRequest.of(request.getPageNumber(), request.getPageSize(), sort);
+
+        // include necessary specifications for filtration
         List<Specification<TransferEntity>> predicates = new ArrayList<>();
         if (request.getSender() != null) {
             predicates.add(senderPredicate(request.getSender().getPhoneNumber()));

@@ -41,13 +41,16 @@ public class CashDeskDao {
     }
 
     public void withdraw(CashDeskEntity entity, double amount) {
+        if (entity.getBalance() < amount) {
+            throw new IllegalArgumentException("Not enough money to withdraw from cash desk " + entity.getId());
+        }
         entity.setBalance(entity.getBalance() - amount);
         repository.save(entity);
     }
 
-    public void deposit(CashDeskEntity entity, Double amount) {
+    public CashDeskEntity deposit(CashDeskEntity entity, Double amount) {
         entity.setBalance(entity.getBalance() + amount);
-        repository.save(entity);
+        return repository.save(entity);
     }
 
     public long count() {
