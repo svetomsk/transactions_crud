@@ -49,4 +49,8 @@ public class CashDeskDao {
         entity.setBalance(entity.getBalance() + amount);
         repository.save(entity);
     }
+
+    public long count() {
+        return repository.count();
+    }
 }
