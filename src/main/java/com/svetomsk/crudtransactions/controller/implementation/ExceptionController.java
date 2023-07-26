@@ -3,6 +3,7 @@ package com.svetomsk.crudtransactions.controller.implementation;
 import com.svetomsk.crudtransactions.model.ErrorMessage;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -36,6 +37,14 @@ public class ExceptionController {
                 .map(DefaultMessageSourceResolvable::getDefaultMessage)
                 .collect(Collectors.joining(";"));
         return new ErrorMessage(errors);
+    }
+
+    @ExceptionHandler(AuthenticationException.class)
+    @ResponseStatus(HttpStatus.UNAUTHORIZED)
+    @ResponseBody
+    public ErrorMessage handleAuthenticationException(AuthenticationException exc) {
+        System.out.println("handling exception");
+        return new ErrorMessage(exc.getMessage());
     }
 
 }

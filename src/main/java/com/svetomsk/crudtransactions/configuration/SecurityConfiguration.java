@@ -38,7 +38,8 @@ public class SecurityConfiguration {
     public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
         httpSecurity
                 .csrf(AbstractHttpConfigurer::disable)
-                .httpBasic(Customizer.withDefaults());
+                .httpBasic(Customizer.withDefaults())
+                .authorizeHttpRequests(c -> c.requestMatchers("/**").permitAll());
         return httpSecurity.build();
     }
 }

@@ -8,6 +8,7 @@ import com.svetomsk.crudtransactions.model.IssueTransferRequest;
 import com.svetomsk.crudtransactions.model.ListTransfersRequest;
 import com.svetomsk.crudtransactions.service.interfaces.TransferService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -16,6 +17,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/transfer")
 @RequiredArgsConstructor
+@PreAuthorize("isAuthenticated()")
 public class TransferControllerImpl implements TransferController {
     private final TransferService transferService;
 
