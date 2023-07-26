@@ -92,6 +92,8 @@ public class TransferServiceImpl implements TransferService {
         UserEntity receiver = transfer.getReceiver();
         if (!receiver.getName().equals(issuer.getName()) ||
                 !receiver.getPhone().equals(issuer.getPhoneNumber())) {
+            log.info(issuer.getName() + " " + issuer.getPhoneNumber());
+            log.info(receiver.getName() + " " + receiver.getPhone());
             throw new IllegalArgumentException("User data does not match");
         } else {
             log.info("User data match");
