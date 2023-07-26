@@ -5,6 +5,7 @@ import com.svetomsk.crudtransactions.entity.UserEntity;
 import com.svetomsk.crudtransactions.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Component;
 
 import java.util.Optional;
@@ -17,7 +18,6 @@ public class UserDao {
 
     public UserEntity findByInfoOrCreate(UserDto userDto) {
         Optional<UserEntity> maybeUser = repository.findByPhone(userDto.getPhoneNumber());
-        // TODO: handle concurrent user creation
         return maybeUser.orElseGet(() -> createNewUsers(userDto));
     }
 
@@ -26,6 +26,15 @@ public class UserDao {
                 .phone(userDto.getPhoneNumber())
                 .name(userDto.getName())
                 .build();
-        return repository.save(entity);
+        try {
+            return repository.save(entity);
+        } catch (DataIntegrityViolationException exc) {
+            log.info("User already exists");
+            return repository.findByPhone(userDto.getPhoneNumber()).get();
+        }
+    }
+
+    public long count() {
+        return repository.count();
     }
 }
