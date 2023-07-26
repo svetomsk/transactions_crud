@@ -81,11 +81,14 @@ public class TransferServiceImpl implements TransferService {
         // find code
         TransferCodeEntity codeEntity = transferCodeDao.findByCode(code);
 
-        // check data equality
         TransferEntity transfer = codeEntity.getTransfer();
+        if (transfer.getAmount() > cashDesk.getBalance()) {
+            throw new IllegalArgumentException("Not enough money to withdraw");
+        }
         if (transfer.getStatus() == TransferStatus.FINISHED) {
             throw new IllegalArgumentException("Duplicate issue for transfer is not allowed");
         }
+        // check data equality
         UserEntity receiver = transfer.getReceiver();
         if (!receiver.getName().equals(issuer.getName()) ||
                 !receiver.getPhone().equals(issuer.getPhoneNumber())) {
