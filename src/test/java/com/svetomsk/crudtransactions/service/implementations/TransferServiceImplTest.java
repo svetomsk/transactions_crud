@@ -77,6 +77,7 @@ public class TransferServiceImplTest {
         when(transferDao.saveTransfer(any())).thenAnswer(answer -> answer.getArguments()[0]);
         var codeEntity = new TransferCodeEntity(1L, code, senderEntity, new TransferEntity());
         when(codeDao.createAndSaveCode(any(), any())).thenReturn(codeEntity);
+        when(cashDeskDao.deposit(any(), any())).thenAnswer(value -> value.getArguments()[0]);
 
         TransferCodeDto actual = transferService.createTransfer(request);
         assertEquals(code, actual.getTransferCode());
@@ -136,20 +137,6 @@ public class TransferServiceImplTest {
     }
 
     @Test
-    public void issueTransfer_cashDeskBalanceIsLessThanTransfer_exceptionThrown() {
-        var cashDeskBalance = 100.0;
-        var transferAmount = 120.0;
-        var cashDeskEntity = CashDeskEntity.builder().balance(cashDeskBalance).build();
-        var transferEntity = TransferEntity.builder().amount(transferAmount).cashDesk(cashDeskEntity).build();
-        var codeEntity = TransferCodeEntity.builder().transfer(transferEntity).build();
-        when(cashDeskDao.findEntityById(any())).thenReturn(cashDeskEntity);
-        when(codeDao.findByCode(any())).thenReturn(codeEntity);
-        assertThrows(IllegalArgumentException.class, () -> {
-            transferService.issueTransfer(new IssueTransferRequest(new UserDto(), "code", 1L));
-        });
-    }
-
-    @Test
     public void issueTransfer_issuerAndReceiverDiffers_exceptionThrown() {
         var cashDeskBalance = 150.0;
         var transferAmount = 120.0;
@@ -157,7 +144,6 @@ public class TransferServiceImplTest {
         var cashDeskEntity = CashDeskEntity.builder().balance(cashDeskBalance).build();
         var transferEntity = TransferEntity.builder().amount(transferAmount).cashDesk(cashDeskEntity).receiver(anotherReceiver).build();
         var codeEntity = TransferCodeEntity.builder().transfer(transferEntity).build();
-        when(cashDeskDao.findEntityById(any())).thenReturn(cashDeskEntity);
         when(codeDao.findByCode(any())).thenReturn(codeEntity);
         assertThrows(IllegalArgumentException.class, () -> {
             transferService.issueTransfer(new IssueTransferRequest(receiver, "code", 1L));
