@@ -7,6 +7,7 @@ import com.svetomsk.crudtransactions.entity.UserEntity;
 import com.svetomsk.crudtransactions.repository.TransferCodeRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -24,8 +25,15 @@ public class TransferCodeDao {
                 .build());
     }
 
+    @Transactional
+    public TransferCodeEntity findAndMarkIssued(String code) {
+        TransferCodeEntity entity = findByCode(code);
+        entity.setIssued(true);
+        return repository.save(entity);
+    }
+
     public TransferCodeEntity findByCode(String code) {
-        return repository.findByCode(code).orElseThrow(
+        return repository.findByCodeAndIssuedFalse(code).orElseThrow(
                 () -> new NoSuchElementException("Code " + code + " is not found in repository")
         );
     }

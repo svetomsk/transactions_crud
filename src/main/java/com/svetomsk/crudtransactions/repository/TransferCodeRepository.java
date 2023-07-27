@@ -8,5 +8,5 @@ import java.util.Optional;
 
 @Repository
 public interface TransferCodeRepository extends JpaRepository<TransferCodeEntity, Long> {
-    Optional<TransferCodeEntity> findByCode(String code);
+    Optional<TransferCodeEntity> findByCodeAndIssuedFalse(String code);
 }

@@ -6,6 +6,10 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "transfer_code")
@@ -27,4 +31,13 @@ public class TransferCodeEntity {
     @ManyToOne
     @JoinColumn(name = "transfer_id", nullable = false)
     private TransferEntity transfer;
+
+    private Boolean issued;
+    @CreationTimestamp
+    private LocalDateTime createdAt;
+    @UpdateTimestamp
+    private LocalDateTime updatedAt;
+
+    @Version
+    private long version;
 }

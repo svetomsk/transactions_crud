@@ -77,18 +77,14 @@ public class TransferServiceImpl implements TransferService {
         UserDto issuer = request.getIssuer();
 
         // find code
-        TransferCodeEntity codeEntity = transferCodeDao.findByCode(code);
-
+        TransferCodeEntity codeEntity = transferCodeDao.findAndMarkIssued(code);
         TransferEntity transfer = codeEntity.getTransfer();
         if (transfer.getStatus() == TransferStatus.FINISHED) {
             throw new IllegalArgumentException("Duplicate issue for transfer is not allowed");
         }
         // check data equality
         UserEntity receiver = transfer.getReceiver();
-        if (!receiver.getName().equals(issuer.getName()) ||
-                !receiver.getPhone().equals(issuer.getPhoneNumber())) {
-            log.info(issuer.getName() + " " + issuer.getPhoneNumber());
-            log.info(receiver.getName() + " " + receiver.getPhone());
+        if (!isIssuerEqualToReceiver(issuer, receiver)) {
             throw new IllegalArgumentException("User data does not match");
         } else {
             log.info("User data match");
@@ -100,6 +96,11 @@ public class TransferServiceImpl implements TransferService {
         // update transfer status
         transfer.setStatus(TransferStatus.FINISHED);
         return TransferDto.entityToDto(transferDao.saveTransfer(transfer));
+    }
+
+    private boolean isIssuerEqualToReceiver(UserDto issuer, UserEntity receiver) {
+        return issuer.getName().equals(receiver.getName()) &&
+                issuer.getPhoneNumber().equals(receiver.getPhone());
     }
 
     @Override
