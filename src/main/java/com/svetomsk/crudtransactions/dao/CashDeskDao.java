@@ -1,5 +1,6 @@
 package com.svetomsk.crudtransactions.dao;
 
+import com.svetomsk.crudtransactions.components.DtoMapper;
 import com.svetomsk.crudtransactions.dto.CashDeskDto;
 import com.svetomsk.crudtransactions.entity.CashDeskEntity;
 import com.svetomsk.crudtransactions.repository.CashDeskRepository;
@@ -17,18 +18,19 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class CashDeskDao {
     private final CashDeskRepository repository;
+    private final DtoMapper dtoMapper;
 
     public CashDeskDto save(CashDeskDto request) {
         var entity = CashDeskEntity.builder()
                 .balance(request.getBalance())
                 .build();
-        return CashDeskDto.entityToDto(repository.save(entity));
+        return dtoMapper.toDto(repository.save(entity));
     }
 
     public List<CashDeskDto> findAllCashDesks() {
         return repository.findAll()
                 .stream()
-                .map(CashDeskDto::entityToDto)
+                .map(dtoMapper::toDto)
                 .collect(Collectors.toList());
     }
 
@@ -38,7 +40,7 @@ public class CashDeskDao {
     }
 
     public CashDeskDto findById(Long id) {
-        return CashDeskDto.entityToDto(findEntityById(id));
+        return dtoMapper.toDto(findEntityById(id));
     }
 
     @Transactional

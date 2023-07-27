@@ -62,6 +62,7 @@ public class TransferServiceImpl implements TransferService {
                 .amount(request.getAmount())
                 .comment(request.getComment())
                 .status(TransferStatus.CREATED)
+                .enabled(true)
                 .build());
 
         // create code for transfer
@@ -93,7 +94,7 @@ public class TransferServiceImpl implements TransferService {
 
         // update transfer status
         transfer.setStatus(TransferStatus.FINISHED);
-        return TransferDto.entityToDto(transferDao.saveTransfer(transfer));
+        return transferDao.saveTransferDto(transfer);
     }
 
     private boolean isIssuerEqualToReceiver(UserDto issuer, UserEntity receiver) {
@@ -119,9 +120,7 @@ public class TransferServiceImpl implements TransferService {
             predicates.add(statusPredicate(request.getStatus()));
         }
         Specification<TransferEntity> unitedPredicates = createComplexPredicate(predicates);
-        List<TransferDto> transfers = transferDao.findAll(unitedPredicates, pageable).stream()
-                .map(TransferDto::entityToDto)
-                .toList();
+        List<TransferDto> transfers = transferDao.findAll(unitedPredicates, pageable);
         return new TransfersListResponse(transfers, request.getPageNumber(), transfers.size());
     }
 }

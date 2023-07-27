@@ -1,5 +1,6 @@
 package com.svetomsk.crudtransactions.service.implementations;
 
+import com.svetomsk.crudtransactions.components.DtoMapper;
 import com.svetomsk.crudtransactions.dao.CashDeskDao;
 import com.svetomsk.crudtransactions.dao.TransferCodeDao;
 import com.svetomsk.crudtransactions.dao.TransferDao;
@@ -43,13 +44,23 @@ public class TransferServiceImplTest {
     private CashDeskDao cashDeskDao;
     @Mock
     private UserDao userDao;
+    @Mock
+    private DtoMapper dtoMapper;
 
     @InjectMocks
     private TransferServiceImpl transferService;
     private UserDto sender = new UserDto("Sender", "Sender phone");
-    private UserEntity senderEntity = new UserEntity(1L, "Sender", "Sender phone");
+    private UserEntity senderEntity = UserEntity.builder()
+            .id(1L)
+            .name("Sender")
+            .phone("Sender phone")
+            .build();
     private UserDto receiver = new UserDto("Receiver", "Receiver phone");
-    private UserEntity receiverEntity = new UserEntity(2L, "Receiver", "Receiver phone");
+    private UserEntity receiverEntity = UserEntity.builder()
+            .id(2L)
+            .name("Receiver")
+            .phone("Receiver phone")
+            .build();
 
 
     @Test
@@ -71,18 +82,17 @@ public class TransferServiceImplTest {
                 .receiverInfo(receiver)
                 .comment(comment)
                 .build();
-        when(cashDeskDao.findEntityById(cashDeskId)).thenReturn(cashDesk);
+        when(cashDeskDao.findAndDeposit(cashDeskId, amount)).thenReturn(cashDesk);
         when(userDao.findByInfoOrCreate(sender)).thenReturn(senderEntity);
         when(userDao.findByInfoOrCreate(receiver)).thenReturn(receiverEntity);
         when(transferDao.saveTransfer(any())).thenAnswer(answer -> answer.getArguments()[0]);
         var codeEntity = TransferCodeEntity.builder().id(1L).code(code).sender(senderEntity).transfer(new TransferEntity()).build();
         when(codeDao.createAndSaveCode(any(), any())).thenReturn(codeEntity);
-        when(cashDeskDao.findAndDeposit(any(), any())).thenAnswer(value -> value.getArguments()[0]);
 
         TransferCodeDto actual = transferService.createTransfer(request);
         assertEquals(code, actual.getTransferCode());
 
-        verify(cashDeskDao, times(1)).findEntityById(cashDeskId);
+        verify(cashDeskDao, times(1)).findAndDeposit(cashDeskId, amount);
         verify(userDao, times(1)).findByInfoOrCreate(sender);
         verify(userDao, times(1)).findByInfoOrCreate(receiver);
         var captor = ArgumentCaptor.forClass(TransferEntity.class);
@@ -110,7 +120,6 @@ public class TransferServiceImplTest {
                 .id(cashDeskId)
                 .build();
         var amount = 100.0;
-        when(cashDeskDao.findEntityById(cashDeskId)).thenReturn(cashDesk);
         var transferId = 123L;
         var transferEntity = TransferEntity.builder()
                 .id(transferId)
@@ -126,29 +135,35 @@ public class TransferServiceImplTest {
                 .code(code)
                 .transfer(transferEntity)
                 .build();
-        when(codeDao.findByCode(any())).thenReturn(codeEntity);
-        when(transferDao.saveTransfer(any())).thenAnswer(answer -> answer.getArguments()[0]);
+        when(codeDao.findAndMarkIssued(any())).thenReturn(codeEntity);
+        var dtoResult = TransferDto.builder().id(1L).currency(TransferCurrency.KGS).build();
+        when(transferDao.saveTransferDto(any())).thenReturn(dtoResult);
 
         var request = new IssueTransferRequest(receiver, code, cashDeskId);
         var actual = transferService.issueTransfer(request);
-        assertEquals(transferId, actual.getId());
-        assertEquals(TransferStatus.FINISHED, actual.getStatus());
+        assertEquals(dtoResult, actual);
 
-        verify(cashDeskDao, times(1)).findEntityById(cashDeskId);
-        verify(codeDao, times(1)).findByCode(code);
+        verify(codeDao, times(1)).findAndMarkIssued(code);
         verify(cashDeskDao, times(1)).findAndWithdraw(cashDeskId, amount);
-        verify(transferDao, times(1)).saveTransfer(transferEntity);
+
+        var transferCaptor = ArgumentCaptor.forClass(TransferEntity.class);
+        verify(transferDao, times(1)).saveTransferDto(transferCaptor.capture());
+        assertEquals(TransferStatus.FINISHED, transferCaptor.getValue().getStatus());
     }
 
     @Test
     public void issueTransfer_issuerAndReceiverDiffers_exceptionThrown() {
         var cashDeskBalance = 150.0;
         var transferAmount = 120.0;
-        var anotherReceiver = new UserEntity(1L, "Another name", "Another phone");
+        var anotherReceiver = UserEntity.builder()
+                .id(1L)
+                .name("Another name")
+                .phone("Another phone")
+                .build();
         var cashDeskEntity = CashDeskEntity.builder().balance(cashDeskBalance).build();
         var transferEntity = TransferEntity.builder().amount(transferAmount).cashDesk(cashDeskEntity).receiver(anotherReceiver).build();
         var codeEntity = TransferCodeEntity.builder().transfer(transferEntity).build();
-        when(codeDao.findByCode(any())).thenReturn(codeEntity);
+        when(codeDao.findAndMarkIssued(any())).thenReturn(codeEntity);
         assertThrows(IllegalArgumentException.class, () -> {
             transferService.issueTransfer(new IssueTransferRequest(receiver, "code", 1L));
         });
@@ -177,15 +192,13 @@ public class TransferServiceImplTest {
             staticMock.when(() -> statusPredicate(any())).thenCallRealMethod();
             staticMock.when(() -> createComplexPredicate(anyList())).thenCallRealMethod();
             dtoMock.when(TransferDto::builder).thenCallRealMethod();
-            dtoMock.when(() -> TransferDto.entityToDto(any()))
-                    .thenAnswer(value -> TransferDto.builder().id(((TransferEntity) value.getArgument(0)).getId()).build());
-            var transferEntities = new ArrayList<TransferEntity>();
-            transferEntities.add(TransferEntity.builder().id(1L).build());
-            transferEntities.add(TransferEntity.builder().id(2L).build());
+            var transferEntities = new ArrayList<TransferDto>();
+            transferEntities.add(TransferDto.builder().id(1L).build());
+            transferEntities.add(TransferDto.builder().id(2L).build());
             when(transferDao.findAll(any(), any())).thenReturn(transferEntities);
 
             var actualList = transferService.listTransfers(request);
-            assertEquals(transferEntities.size(), actualList.size());
+            assertEquals(transferEntities.size(), actualList.getTransfers().size());
 
             staticMock.verify(() -> senderPredicate(sender.getPhoneNumber()), times(1));
             staticMock.verify(() -> receiverPredicate(receiver.getPhoneNumber()), times(1));

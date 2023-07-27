@@ -1,6 +1,5 @@
 package com.svetomsk.crudtransactions.dto;
 
-import com.svetomsk.crudtransactions.entity.TransferEntity;
 import com.svetomsk.crudtransactions.enums.TransferCurrency;
 import com.svetomsk.crudtransactions.enums.TransferStatus;
 import lombok.AllArgsConstructor;
@@ -25,19 +24,4 @@ public class TransferDto {
     private LocalDateTime createAt;
     private LocalDateTime updatedAt;
     private Long cashDesk;
-
-    public static TransferDto entityToDto(TransferEntity entity) {
-        return TransferDto.builder()
-                .id(entity.getId())
-                .amount(entity.getAmount())
-                .currency(entity.getCurrency())
-                .cashDesk(entity.getCashDesk().getId())
-                .sender(UserDto.entityToDto(entity.getSender()))
-                .receiver(UserDto.entityToDto(entity.getReceiver()))
-                .comment(entity.getComment())
-                .status(entity.getStatus())
-                .createAt(entity.getCreatedAt())
-                .updatedAt(entity.getUpdatedAt())
-                .build();
-    }
 }

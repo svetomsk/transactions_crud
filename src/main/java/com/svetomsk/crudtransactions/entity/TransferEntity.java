@@ -48,5 +48,6 @@ public class TransferEntity {
     private LocalDateTime createdAt;
     @UpdateTimestamp
     private LocalDateTime updatedAt;
+    @Column(columnDefinition = "boolean default true")
     private boolean enabled = true;
 }
