@@ -78,11 +78,9 @@ public class TransferServiceImpl implements TransferService {
 
         // find code
         TransferCodeEntity codeEntity = transferCodeDao.findAndMarkIssued(code);
-        TransferEntity transfer = codeEntity.getTransfer();
-        if (transfer.getStatus() == TransferStatus.FINISHED) {
-            throw new IllegalArgumentException("Duplicate issue for transfer is not allowed");
-        }
+
         // check data equality
+        TransferEntity transfer = codeEntity.getTransfer();
         UserEntity receiver = transfer.getReceiver();
         if (!isIssuerEqualToReceiver(issuer, receiver)) {
             throw new IllegalArgumentException("User data does not match");

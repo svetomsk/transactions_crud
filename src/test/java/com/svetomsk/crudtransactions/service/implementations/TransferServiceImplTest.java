@@ -75,7 +75,7 @@ public class TransferServiceImplTest {
         when(userDao.findByInfoOrCreate(sender)).thenReturn(senderEntity);
         when(userDao.findByInfoOrCreate(receiver)).thenReturn(receiverEntity);
         when(transferDao.saveTransfer(any())).thenAnswer(answer -> answer.getArguments()[0]);
-        var codeEntity = new TransferCodeEntity(1L, code, senderEntity, new TransferEntity());
+        var codeEntity = TransferCodeEntity.builder().id(1L).code(code).sender(senderEntity).transfer(new TransferEntity()).build();
         when(codeDao.createAndSaveCode(any(), any())).thenReturn(codeEntity);
         when(cashDeskDao.findAndDeposit(any(), any())).thenAnswer(value -> value.getArguments()[0]);
 
@@ -121,7 +121,11 @@ public class TransferServiceImplTest {
                 .sender(senderEntity)
                 .build();
         var code = "some code";
-        var codeEntity = new TransferCodeEntity(1L, code, null, transferEntity);
+        var codeEntity = TransferCodeEntity.builder()
+                .id(1L)
+                .code(code)
+                .transfer(transferEntity)
+                .build();
         when(codeDao.findByCode(any())).thenReturn(codeEntity);
         when(transferDao.saveTransfer(any())).thenAnswer(answer -> answer.getArguments()[0]);
 
