@@ -47,8 +47,7 @@ public class TransferServiceImpl implements TransferService {
         UserDto receiverDto = request.getReceiverInfo();
 
         // update cash desk balance
-        CashDeskEntity cashDesk = cashDeskDao.findEntityById(request.getCashDeskId());
-        cashDesk = cashDeskDao.deposit(cashDesk, request.getAmount());
+        CashDeskEntity cashDesk = cashDeskDao.findAndDeposit(request.getCashDeskId(), request.getAmount());
 
         // retrieve or create users
         UserEntity sender = userDao.findByInfoOrCreate(senderDto);

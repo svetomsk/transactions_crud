@@ -77,7 +77,7 @@ public class TransferServiceImplTest {
         when(transferDao.saveTransfer(any())).thenAnswer(answer -> answer.getArguments()[0]);
         var codeEntity = new TransferCodeEntity(1L, code, senderEntity, new TransferEntity());
         when(codeDao.createAndSaveCode(any(), any())).thenReturn(codeEntity);
-        when(cashDeskDao.deposit(any(), any())).thenAnswer(value -> value.getArguments()[0]);
+        when(cashDeskDao.findAndDeposit(any(), any())).thenAnswer(value -> value.getArguments()[0]);
 
         TransferCodeDto actual = transferService.createTransfer(request);
         assertEquals(code, actual.getTransferCode());
@@ -99,7 +99,7 @@ public class TransferServiceImplTest {
         assertEquals(TransferStatus.CREATED, value.getStatus());
 
         verify(codeDao, times(1)).createAndSaveCode(senderEntity, captor.getValue());
-        verify(cashDeskDao, times(1)).deposit(cashDesk, amount);
+        verify(cashDeskDao, times(1)).findAndDeposit(cashDeskId, amount);
     }
 
     @Test

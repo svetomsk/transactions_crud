@@ -3,13 +3,9 @@ package com.svetomsk.crudtransactions.dao;
 import com.svetomsk.crudtransactions.dto.CashDeskDto;
 import com.svetomsk.crudtransactions.entity.CashDeskEntity;
 import com.svetomsk.crudtransactions.repository.CashDeskRepository;
-import jakarta.persistence.LockModeType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.jpa.repository.Lock;
-import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
@@ -55,7 +51,9 @@ public class CashDeskDao {
         repository.save(entity);
     }
 
-    public CashDeskEntity deposit(CashDeskEntity entity, Double amount) {
+    @Transactional
+    public CashDeskEntity findAndDeposit(Long entityId, Double amount) {
+        CashDeskEntity entity = findEntityById(entityId);
         entity.setBalance(entity.getBalance() + amount);
         return repository.save(entity);
     }
