@@ -15,6 +15,7 @@ import com.svetomsk.crudtransactions.enums.TransferStatus;
 import com.svetomsk.crudtransactions.model.CreateTransferRequest;
 import com.svetomsk.crudtransactions.model.IssueTransferRequest;
 import com.svetomsk.crudtransactions.model.ListTransfersRequest;
+import com.svetomsk.crudtransactions.model.TransfersListResponse;
 import com.svetomsk.crudtransactions.service.interfaces.TransferService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -27,7 +28,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static com.svetomsk.crudtransactions.repository.TransferSpecifications.*;
 
@@ -76,7 +76,7 @@ public class TransferServiceImpl implements TransferService {
         String code = request.getSecretCode();
         UserDto issuer = request.getIssuer();
 
-        // find code
+        // find code or fail if code already used
         TransferCodeEntity codeEntity = transferCodeDao.findAndMarkIssued(code);
 
         // check data equality
@@ -102,7 +102,7 @@ public class TransferServiceImpl implements TransferService {
     }
 
     @Override
-    public List<TransferDto> listTransfers(ListTransfersRequest request) {
+    public TransfersListResponse listTransfers(ListTransfersRequest request) {
         // create sorting and pageable objects
         Sort sort = Sort.by(request.getOrder(), request.getSortBy().getColumn());
         Pageable pageable = PageRequest.of(request.getPageNumber(), request.getPageSize(), sort);
@@ -119,8 +119,9 @@ public class TransferServiceImpl implements TransferService {
             predicates.add(statusPredicate(request.getStatus()));
         }
         Specification<TransferEntity> unitedPredicates = createComplexPredicate(predicates);
-        return transferDao.findAll(unitedPredicates, pageable).stream()
+        List<TransferDto> transfers = transferDao.findAll(unitedPredicates, pageable).stream()
                 .map(TransferDto::entityToDto)
-                .collect(Collectors.toList());
+                .toList();
+        return new TransfersListResponse(transfers, request.getPageNumber(), transfers.size());
     }
 }

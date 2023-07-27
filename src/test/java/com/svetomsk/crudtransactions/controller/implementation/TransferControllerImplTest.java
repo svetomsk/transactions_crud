@@ -7,6 +7,7 @@ import com.svetomsk.crudtransactions.enums.TransferCurrency;
 import com.svetomsk.crudtransactions.model.CreateTransferRequest;
 import com.svetomsk.crudtransactions.model.IssueTransferRequest;
 import com.svetomsk.crudtransactions.model.ListTransfersRequest;
+import com.svetomsk.crudtransactions.model.TransfersListResponse;
 import com.svetomsk.crudtransactions.service.interfaces.TransferService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,8 +16,6 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
-
-import java.util.ArrayList;
 
 import static com.svetomsk.crudtransactions.Utils.performRequest;
 import static org.mockito.ArgumentMatchers.any;
@@ -95,7 +94,7 @@ public class TransferControllerImplTest {
     @Test
     @WithMockUser
     public void listTransfers_withAuth_listTransfersCalled() throws Exception {
-        when(transferService.listTransfers(any())).thenReturn(new ArrayList<>());
+        when(transferService.listTransfers(any())).thenReturn(new TransfersListResponse());
         var request = new ListTransfersRequest();
         performRequest(mvc, post("/transfer/list")
                 .with(csrf())

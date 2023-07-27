@@ -33,7 +33,7 @@ public class TransferCodeEntity {
     @JoinColumn(name = "transfer_id", nullable = false)
     private TransferEntity transfer;
 
-    private Boolean issued;
+    private boolean issued;
     @CreationTimestamp
     private LocalDateTime createdAt;
     @UpdateTimestamp

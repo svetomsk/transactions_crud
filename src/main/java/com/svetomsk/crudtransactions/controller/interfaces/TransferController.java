@@ -5,14 +5,13 @@ import com.svetomsk.crudtransactions.dto.TransferDto;
 import com.svetomsk.crudtransactions.model.CreateTransferRequest;
 import com.svetomsk.crudtransactions.model.IssueTransferRequest;
 import com.svetomsk.crudtransactions.model.ListTransfersRequest;
+import com.svetomsk.crudtransactions.model.TransfersListResponse;
 import jakarta.validation.Valid;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/transfer")
@@ -24,5 +23,5 @@ public interface TransferController {
     TransferDto issueTransfer(@RequestBody @Valid IssueTransferRequest request);
 
     @PostMapping(value = "/list", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    List<TransferDto> listTransfers(@RequestBody @Valid ListTransfersRequest request);
+    TransfersListResponse listTransfers(@RequestBody @Valid ListTransfersRequest request);
 }
