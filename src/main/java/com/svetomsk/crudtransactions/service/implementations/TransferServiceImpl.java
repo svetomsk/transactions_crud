@@ -16,6 +16,7 @@ import com.svetomsk.crudtransactions.model.CreateTransferRequest;
 import com.svetomsk.crudtransactions.model.IssueTransferRequest;
 import com.svetomsk.crudtransactions.model.ListTransfersRequest;
 import com.svetomsk.crudtransactions.model.TransfersListResponse;
+import com.svetomsk.crudtransactions.repository.specifications.PredicateWithCondition;
 import com.svetomsk.crudtransactions.service.interfaces.TransferService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -29,7 +30,7 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.svetomsk.crudtransactions.repository.TransferSpecifications.*;
+import static com.svetomsk.crudtransactions.repository.specifications.TransferSpecifications.createComplexPredicate;
 
 @Slf4j
 @Service
@@ -39,6 +40,7 @@ public class TransferServiceImpl implements TransferService {
     private final CashDeskDao cashDeskDao;
     private final TransferDao transferDao;
     private final TransferCodeDao transferCodeDao;
+    private final List<PredicateWithCondition<ListTransfersRequest, TransferEntity>> predicates;
 
     @Override
     @Transactional
@@ -109,17 +111,15 @@ public class TransferServiceImpl implements TransferService {
         Pageable pageable = PageRequest.of(request.getPageNumber(), request.getPageSize(), sort);
 
         // include necessary specifications for filtration
-        List<Specification<TransferEntity>> predicates = new ArrayList<>();
-        if (request.getSender() != null) {
-            predicates.add(senderPredicate(request.getSender().getPhoneNumber()));
+        List<Specification<TransferEntity>> specifications = new ArrayList<>();
+        for (var predicate : predicates) {
+            var specification = predicate.makeSpecification(request);
+            if (specification != null) {
+                specifications.add(specification);
+            }
         }
-        if (request.getReceiver() != null) {
-            predicates.add(receiverPredicate(request.getReceiver().getPhoneNumber()));
-        }
-        if (request.getStatus() != null) {
-            predicates.add(statusPredicate(request.getStatus()));
-        }
-        Specification<TransferEntity> unitedPredicates = createComplexPredicate(predicates);
+
+        Specification<TransferEntity> unitedPredicates = createComplexPredicate(specifications);
         List<TransferDto> transfers = transferDao.findAll(unitedPredicates, pageable);
         return new TransfersListResponse(transfers, request.getPageNumber(), transfers.size());
     }

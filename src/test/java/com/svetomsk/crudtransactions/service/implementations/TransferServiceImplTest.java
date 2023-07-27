@@ -18,7 +18,7 @@ import com.svetomsk.crudtransactions.enums.TransferStatus;
 import com.svetomsk.crudtransactions.model.CreateTransferRequest;
 import com.svetomsk.crudtransactions.model.IssueTransferRequest;
 import com.svetomsk.crudtransactions.model.ListTransfersRequest;
-import com.svetomsk.crudtransactions.repository.TransferSpecifications;
+import com.svetomsk.crudtransactions.repository.specifications.*;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
@@ -28,8 +28,9 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 
 import java.util.ArrayList;
+import java.util.List;
 
-import static com.svetomsk.crudtransactions.repository.TransferSpecifications.*;
+import static com.svetomsk.crudtransactions.repository.specifications.TransferSpecifications.createComplexPredicate;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -46,6 +47,14 @@ public class TransferServiceImplTest {
     private UserDao userDao;
     @Mock
     private DtoMapper dtoMapper;
+    @Mock
+    private SenderPhonePredicate senderPhonePredicate;
+    @Mock
+    private ReceiverPhonePredicate receiverPhonePredicate;
+    @Mock
+    private StatusPredicate statusPredicate;
+    @Spy
+    List<PredicateWithCondition<ListTransfersRequest, TransferEntity>> predicates = new ArrayList<>();
 
     @InjectMocks
     private TransferServiceImpl transferService;
@@ -174,6 +183,15 @@ public class TransferServiceImplTest {
 
     @Test
     public void listTransfers_correctRequest_necessaryFiltersApplied() {
+        predicates.add(receiverPhonePredicate);
+        predicates.add(senderPhonePredicate);
+        predicates.add(statusPredicate);
+        Specification<TransferEntity> specification = (root, query, criteriaBuilder)
+                -> criteriaBuilder.equal(root.get("status"), TransferStatus.CREATED);
+        for (var predicate : predicates) {
+            when(predicate.makeSpecification(any())).thenReturn(specification);
+        }
+
         var pageNumber = 0;
         var pageSize = 10;
         var request = ListTransfersRequest.builder()
@@ -185,13 +203,8 @@ public class TransferServiceImplTest {
                 .sender(sender)
                 .status(TransferStatus.FINISHED)
                 .build();
-        try (MockedStatic<TransferSpecifications> staticMock = mockStatic(TransferSpecifications.class);
-             MockedStatic<TransferDto> dtoMock = mockStatic(TransferDto.class)) {
-            staticMock.when(() -> senderPredicate(any())).thenCallRealMethod();
-            staticMock.when(() -> receiverPredicate(any())).thenCallRealMethod();
-            staticMock.when(() -> statusPredicate(any())).thenCallRealMethod();
+        try (MockedStatic<TransferSpecifications> staticMock = mockStatic(TransferSpecifications.class)) {
             staticMock.when(() -> createComplexPredicate(anyList())).thenCallRealMethod();
-            dtoMock.when(TransferDto::builder).thenCallRealMethod();
             var transferEntities = new ArrayList<TransferDto>();
             transferEntities.add(TransferDto.builder().id(1L).build());
             transferEntities.add(TransferDto.builder().id(2L).build());
@@ -199,10 +212,9 @@ public class TransferServiceImplTest {
 
             var actualList = transferService.listTransfers(request);
             assertEquals(transferEntities.size(), actualList.getTransfers().size());
-
-            staticMock.verify(() -> senderPredicate(sender.getPhoneNumber()), times(1));
-            staticMock.verify(() -> receiverPredicate(receiver.getPhoneNumber()), times(1));
-            staticMock.verify(() -> statusPredicate(TransferStatus.FINISHED), times(1));
+            for (var predicate : predicates) {
+                verify(predicate, times(1)).makeSpecification(any());
+            }
             staticMock.verify(() -> createComplexPredicate(specificationCaptor.capture()), times(1));
             assertEquals(3, specificationCaptor.getValue().size());
             var pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
