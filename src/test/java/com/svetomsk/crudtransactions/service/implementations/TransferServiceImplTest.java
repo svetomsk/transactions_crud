@@ -132,7 +132,7 @@ public class TransferServiceImplTest {
 
         verify(cashDeskDao, times(1)).findEntityById(cashDeskId);
         verify(codeDao, times(1)).findByCode(code);
-        verify(cashDeskDao, times(1)).withdraw(cashDesk, amount);
+        verify(cashDeskDao, times(1)).findAndWithdraw(cashDeskId, amount);
         verify(transferDao, times(1)).saveTransfer(transferEntity);
     }
 

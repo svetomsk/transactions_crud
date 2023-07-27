@@ -7,7 +7,10 @@ import jakarta.persistence.LockModeType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.jpa.repository.Lock;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Isolation;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -33,7 +36,6 @@ public class CashDeskDao {
                 .collect(Collectors.toList());
     }
 
-    @Lock(LockModeType.OPTIMISTIC_FORCE_INCREMENT)
     public CashDeskEntity findEntityById(Long id) {
         return repository.findById(id).orElseThrow(
                 () -> new NoSuchElementException("Desk with id " + id + " is not found"));
@@ -43,7 +45,9 @@ public class CashDeskDao {
         return CashDeskDto.entityToDto(findEntityById(id));
     }
 
-    public void withdraw(CashDeskEntity entity, double amount) {
+    @Transactional
+    public void findAndWithdraw(Long id, double amount) {
+        var entity = findEntityById(id);
         if (entity.getBalance() < amount) {
             throw new IllegalArgumentException("Not enough money to withdraw from cash desk " + entity.getId());
         }

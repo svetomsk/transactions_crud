@@ -96,8 +96,7 @@ public class TransferServiceImpl implements TransferService {
         }
 
         // update cash desk balance
-        CashDeskEntity cashDesk = cashDeskDao.findEntityById(request.getCashDeskId());
-        cashDeskDao.withdraw(cashDesk, transfer.getAmount());
+        cashDeskDao.findAndWithdraw(request.getCashDeskId(), transfer.getAmount());
 
         // update transfer status
         transfer.setStatus(TransferStatus.FINISHED);
