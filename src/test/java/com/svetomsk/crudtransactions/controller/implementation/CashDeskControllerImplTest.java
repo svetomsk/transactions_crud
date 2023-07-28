@@ -39,13 +39,13 @@ public class CashDeskControllerImplTest {
     @WithMockUser
     public void createCashDesk_correctRequest_serviceCalled() throws Exception {
         var request = new CashDeskDto();
-        when(cashDeskService.createCashDesk(any())).thenReturn(request);
+        when(cashDeskService.createCashDesk()).thenReturn(request);
         performRequest(mvc, post("/cashDesk/create")
                 .with(csrf())
                 .content(Utils.stringify(mapper, request))
                 .contentType(MediaType.APPLICATION_JSON_VALUE))
                 .andExpect(status().isCreated());
-        verify(cashDeskService, times(1)).createCashDesk(any());
+        verify(cashDeskService, times(1)).createCashDesk();
     }
 
     @Test

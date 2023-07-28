@@ -22,7 +22,7 @@ public class CashDeskEntity {
     private Long id;
 
     @CreationTimestamp
-    private LocalDateTime createAt;
+    private LocalDateTime createdAt;
 
     @UpdateTimestamp
     private LocalDateTime updatedAt;

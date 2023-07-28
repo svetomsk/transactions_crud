@@ -90,10 +90,10 @@ public class TransferServiceImpl implements TransferService {
         }
 
         // update cash desk balance
-        double amount = exchangeService.convert(transfer.getCurrency(), transfer.getAmount(), request.getReceiverCurrency());
+        double amount = exchangeService.convert(transfer.getCurrency(), transfer.getAmount(), request.getCurrency());
         CashDeskEntity cashDesk = transfer.getCashDesk();
 
-        accountDao.findAndWithdraw(cashDesk, request.getReceiverCurrency(), amount);
+        accountDao.findAndWithdraw(cashDesk, request.getCurrency(), amount);
 
         // update transfer status
         transfer.setStatus(TransferStatus.FINISHED);

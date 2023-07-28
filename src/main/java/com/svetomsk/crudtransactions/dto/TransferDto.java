@@ -21,7 +21,7 @@ public class TransferDto {
     private UserDto receiver;
     private String comment;
     private TransferStatus status;
-    private LocalDateTime createAt;
+    private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-    private Long cashDesk;
+    private CashDeskDto cashDesk;
 }

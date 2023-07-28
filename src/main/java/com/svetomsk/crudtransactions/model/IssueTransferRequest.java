@@ -13,5 +13,5 @@ public class IssueTransferRequest {
     private UserDto issuer;
     private String secretCode;
     private Long cashDeskId;
-    private TransferCurrency receiverCurrency;
+    private TransferCurrency currency;
 }

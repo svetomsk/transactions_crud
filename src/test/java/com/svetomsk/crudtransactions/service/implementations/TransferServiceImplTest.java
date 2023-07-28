@@ -33,6 +33,8 @@ public class TransferServiceImplTest {
     @Mock
     private TransferDao transferDao;
     @Mock
+    private FixedCurrencyExchangeServiceImpl exchangeService;
+    @Mock
     private TransferCodeDao codeDao;
     @Mock
     private CashDeskDao cashDeskDao;
@@ -86,14 +88,13 @@ public class TransferServiceImplTest {
         when(accountDao.findAndDeposit(cashDesk, TransferCurrency.KGS, amount)).thenReturn(new CashDeskAccountEntity());
         when(userDao.findByInfoOrCreate(sender)).thenReturn(senderEntity);
         when(userDao.findByInfoOrCreate(receiver)).thenReturn(receiverEntity);
+        when(cashDeskDao.findEntityById(any())).thenReturn(cashDesk);
         when(transferDao.saveTransfer(any())).thenAnswer(answer -> answer.getArguments()[0]);
         var codeEntity = TransferCodeEntity.builder().id(1L).code(code).sender(senderEntity).transfer(new TransferEntity()).build();
         when(codeDao.createAndSaveCode(any(), any())).thenReturn(codeEntity);
 
         TransferCodeDto actual = transferService.createTransfer(request);
         assertEquals(code, actual.getTransferCode());
-
-        verify(cashDeskDao, times(1)).findAndDeposit(cashDeskId, amount);
         verify(userDao, times(1)).findByInfoOrCreate(sender);
         verify(userDao, times(1)).findByInfoOrCreate(receiver);
         var captor = ArgumentCaptor.forClass(TransferEntity.class);
@@ -110,7 +111,6 @@ public class TransferServiceImplTest {
         assertEquals(TransferStatus.CREATED, value.getStatus());
 
         verify(codeDao, times(1)).createAndSaveCode(senderEntity, captor.getValue());
-        verify(cashDeskDao, times(1)).findAndDeposit(cashDeskId, amount);
     }
 
     @Test
@@ -128,6 +128,7 @@ public class TransferServiceImplTest {
                 .receiver(receiverEntity)
                 .cashDesk(cashDesk)
                 .sender(senderEntity)
+                .currency(TransferCurrency.KGS)
                 .build();
         var code = "some code";
         var codeEntity = TransferCodeEntity.builder()
@@ -138,6 +139,7 @@ public class TransferServiceImplTest {
         when(codeDao.findAndMarkIssued(any())).thenReturn(codeEntity);
         var dtoResult = TransferDto.builder().id(1L).currency(TransferCurrency.KGS).build();
         when(transferDao.saveTransferDto(any())).thenReturn(dtoResult);
+        when(exchangeService.convert(TransferCurrency.KGS, amount, TransferCurrency.KGS)).thenReturn(amount);
 
         var request = new IssueTransferRequest(receiver, code, cashDeskId, TransferCurrency.KGS);
         var actual = transferService.issueTransfer(request);
