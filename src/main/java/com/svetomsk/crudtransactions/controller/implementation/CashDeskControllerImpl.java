@@ -17,8 +17,8 @@ import java.util.List;
 public class CashDeskControllerImpl implements CashDeskController {
     private final CashDeskService cashDeskService;
     @Override
-    public ResponseEntity<CashDeskDto> createCashDesk(CashDeskDto request) {
-        return new ResponseEntity<>(cashDeskService.createCashDesk(request), HttpStatus.CREATED);
+    public ResponseEntity<CashDeskDto> createCashDesk() {
+        return new ResponseEntity<>(cashDeskService.createCashDesk(), HttpStatus.CREATED);
     }
 
     @Override

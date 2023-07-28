@@ -1,6 +1,6 @@
 package com.svetomsk.crudtransactions.dto;
 
-import jakarta.persistence.Id;
+import com.svetomsk.crudtransactions.enums.TransferCurrency;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -10,9 +10,9 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class UserDto {
-    @Id
+public class CashDeskAccountDto {
     private Long id;
-    private String name;
-    private String phone;
+    private TransferCurrency currency;
+    private Double balance;
+    private Long cashDeskId;
 }

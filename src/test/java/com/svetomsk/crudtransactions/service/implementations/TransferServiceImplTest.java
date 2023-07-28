@@ -1,17 +1,10 @@
 package com.svetomsk.crudtransactions.service.implementations;
 
-import com.svetomsk.crudtransactions.components.DtoMapper;
-import com.svetomsk.crudtransactions.dao.CashDeskDao;
-import com.svetomsk.crudtransactions.dao.TransferCodeDao;
-import com.svetomsk.crudtransactions.dao.TransferDao;
-import com.svetomsk.crudtransactions.dao.UserDao;
+import com.svetomsk.crudtransactions.dao.*;
 import com.svetomsk.crudtransactions.dto.TransferCodeDto;
 import com.svetomsk.crudtransactions.dto.TransferDto;
 import com.svetomsk.crudtransactions.dto.UserDto;
-import com.svetomsk.crudtransactions.entity.CashDeskEntity;
-import com.svetomsk.crudtransactions.entity.TransferCodeEntity;
-import com.svetomsk.crudtransactions.entity.TransferEntity;
-import com.svetomsk.crudtransactions.entity.UserEntity;
+import com.svetomsk.crudtransactions.entity.*;
 import com.svetomsk.crudtransactions.enums.TransferCurrency;
 import com.svetomsk.crudtransactions.enums.TransferOrderParam;
 import com.svetomsk.crudtransactions.enums.TransferStatus;
@@ -46,7 +39,7 @@ public class TransferServiceImplTest {
     @Mock
     private UserDao userDao;
     @Mock
-    private DtoMapper dtoMapper;
+    private CashDeskAccountDao accountDao;
     @Mock
     private SenderPhonePredicate senderPhonePredicate;
     @Mock
@@ -58,13 +51,13 @@ public class TransferServiceImplTest {
 
     @InjectMocks
     private TransferServiceImpl transferService;
-    private UserDto sender = new UserDto("Sender", "Sender phone");
+    private UserDto sender = new UserDto(1L, "Sender", "Sender phone");
     private UserEntity senderEntity = UserEntity.builder()
             .id(1L)
             .name("Sender")
             .phone("Sender phone")
             .build();
-    private UserDto receiver = new UserDto("Receiver", "Receiver phone");
+    private UserDto receiver = new UserDto(2L, "Receiver", "Receiver phone");
     private UserEntity receiverEntity = UserEntity.builder()
             .id(2L)
             .name("Receiver")
@@ -80,7 +73,6 @@ public class TransferServiceImplTest {
         long cashDeskId = 1L;
         String code = "Some code";
         CashDeskEntity cashDesk = CashDeskEntity.builder()
-                .balance(2000.0)
                 .id(cashDeskId)
                 .build();
         CreateTransferRequest request = CreateTransferRequest.builder()
@@ -91,7 +83,7 @@ public class TransferServiceImplTest {
                 .receiverInfo(receiver)
                 .comment(comment)
                 .build();
-        when(cashDeskDao.findAndDeposit(cashDeskId, amount)).thenReturn(cashDesk);
+        when(accountDao.findAndDeposit(cashDesk, TransferCurrency.KGS, amount)).thenReturn(new CashDeskAccountEntity());
         when(userDao.findByInfoOrCreate(sender)).thenReturn(senderEntity);
         when(userDao.findByInfoOrCreate(receiver)).thenReturn(receiverEntity);
         when(transferDao.saveTransfer(any())).thenAnswer(answer -> answer.getArguments()[0]);
@@ -125,7 +117,6 @@ public class TransferServiceImplTest {
     public void issueTransfer_requestOk_transferIssued() {
         var cashDeskId = 1L;
         var cashDesk = CashDeskEntity.builder()
-                .balance(200.0)
                 .id(cashDeskId)
                 .build();
         var amount = 100.0;
@@ -148,12 +139,12 @@ public class TransferServiceImplTest {
         var dtoResult = TransferDto.builder().id(1L).currency(TransferCurrency.KGS).build();
         when(transferDao.saveTransferDto(any())).thenReturn(dtoResult);
 
-        var request = new IssueTransferRequest(receiver, code, cashDeskId);
+        var request = new IssueTransferRequest(receiver, code, cashDeskId, TransferCurrency.KGS);
         var actual = transferService.issueTransfer(request);
         assertEquals(dtoResult, actual);
 
         verify(codeDao, times(1)).findAndMarkIssued(code);
-        verify(cashDeskDao, times(1)).findAndWithdraw(cashDeskId, amount);
+        verify(accountDao, times(1)).findAndWithdraw(cashDesk, TransferCurrency.KGS, amount);
 
         var transferCaptor = ArgumentCaptor.forClass(TransferEntity.class);
         verify(transferDao, times(1)).saveTransferDto(transferCaptor.capture());
@@ -169,12 +160,12 @@ public class TransferServiceImplTest {
                 .name("Another name")
                 .phone("Another phone")
                 .build();
-        var cashDeskEntity = CashDeskEntity.builder().balance(cashDeskBalance).build();
+        var cashDeskEntity = CashDeskEntity.builder().build();
         var transferEntity = TransferEntity.builder().amount(transferAmount).cashDesk(cashDeskEntity).receiver(anotherReceiver).build();
         var codeEntity = TransferCodeEntity.builder().transfer(transferEntity).build();
         when(codeDao.findAndMarkIssued(any())).thenReturn(codeEntity);
         assertThrows(IllegalArgumentException.class, () -> {
-            transferService.issueTransfer(new IssueTransferRequest(receiver, "code", 1L));
+            transferService.issueTransfer(new IssueTransferRequest(receiver, "code", 1L, TransferCurrency.KGS));
         });
     }
 

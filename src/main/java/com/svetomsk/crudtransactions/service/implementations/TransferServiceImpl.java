@@ -1,22 +1,17 @@
 package com.svetomsk.crudtransactions.service.implementations;
 
-import com.svetomsk.crudtransactions.dao.CashDeskDao;
-import com.svetomsk.crudtransactions.dao.TransferCodeDao;
-import com.svetomsk.crudtransactions.dao.TransferDao;
-import com.svetomsk.crudtransactions.dao.UserDao;
+import com.svetomsk.crudtransactions.dao.*;
 import com.svetomsk.crudtransactions.dto.TransferCodeDto;
 import com.svetomsk.crudtransactions.dto.TransferDto;
 import com.svetomsk.crudtransactions.dto.UserDto;
-import com.svetomsk.crudtransactions.entity.CashDeskEntity;
-import com.svetomsk.crudtransactions.entity.TransferCodeEntity;
-import com.svetomsk.crudtransactions.entity.TransferEntity;
-import com.svetomsk.crudtransactions.entity.UserEntity;
+import com.svetomsk.crudtransactions.entity.*;
 import com.svetomsk.crudtransactions.enums.TransferStatus;
 import com.svetomsk.crudtransactions.model.CreateTransferRequest;
 import com.svetomsk.crudtransactions.model.IssueTransferRequest;
 import com.svetomsk.crudtransactions.model.ListTransfersRequest;
 import com.svetomsk.crudtransactions.model.TransfersListResponse;
 import com.svetomsk.crudtransactions.repository.specifications.PredicateWithCondition;
+import com.svetomsk.crudtransactions.service.interfaces.CurrencyExchangeService;
 import com.svetomsk.crudtransactions.service.interfaces.TransferService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -39,7 +34,9 @@ public class TransferServiceImpl implements TransferService {
     private final UserDao userDao;
     private final CashDeskDao cashDeskDao;
     private final TransferDao transferDao;
+    private final CashDeskAccountDao accountDao;
     private final TransferCodeDao transferCodeDao;
+    private final CurrencyExchangeService exchangeService;
     private final List<PredicateWithCondition<ListTransfersRequest, TransferEntity>> predicates;
 
     @Override
@@ -48,8 +45,9 @@ public class TransferServiceImpl implements TransferService {
         UserDto senderDto = request.getSenderInfo();
         UserDto receiverDto = request.getReceiverInfo();
 
-        // update cash desk balance
-        CashDeskEntity cashDesk = cashDeskDao.findAndDeposit(request.getCashDeskId(), request.getAmount());
+        // update account balance
+        CashDeskEntity cashDesk = cashDeskDao.findEntityById(request.getCashDeskId());
+        CashDeskAccountEntity account = accountDao.findAndDeposit(cashDesk, request.getCurrency(), request.getAmount());
 
         // retrieve or create users
         UserEntity sender = userDao.findByInfoOrCreate(senderDto);
@@ -92,7 +90,10 @@ public class TransferServiceImpl implements TransferService {
         }
 
         // update cash desk balance
-        cashDeskDao.findAndWithdraw(request.getCashDeskId(), transfer.getAmount());
+        double amount = exchangeService.convert(transfer.getCurrency(), transfer.getAmount(), request.getReceiverCurrency());
+        CashDeskEntity cashDesk = transfer.getCashDesk();
+
+        accountDao.findAndWithdraw(cashDesk, request.getReceiverCurrency(), amount);
 
         // update transfer status
         transfer.setStatus(TransferStatus.FINISHED);
@@ -101,7 +102,7 @@ public class TransferServiceImpl implements TransferService {
 
     private boolean isIssuerEqualToReceiver(UserDto issuer, UserEntity receiver) {
         return issuer.getName().equals(receiver.getName()) &&
-                issuer.getPhoneNumber().equals(receiver.getPhone());
+                issuer.getPhone().equals(receiver.getPhone());
     }
 
     @Override

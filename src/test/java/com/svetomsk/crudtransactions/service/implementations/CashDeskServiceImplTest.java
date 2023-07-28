@@ -8,10 +8,9 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.sql.Array;
 import java.util.ArrayList;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -24,20 +23,19 @@ public class CashDeskServiceImplTest {
 
     @Test
     public void createCashDesk_validRequest_daoObjectCalled() {
-        var dto = new CashDeskDto();
-        var expected = new CashDeskDto(1L, 12.0);
-        when(cashDeskDao.save(dto)).thenReturn(expected);
-        var actual = service.createCashDesk(dto);
+        var expected = new CashDeskDto();
+        when(cashDeskDao.createCashDesk()).thenReturn(expected);
+        var actual = service.createCashDesk();
         assertEquals(expected, actual);
-        verify(cashDeskDao, times(1)).save(dto);
+        verify(cashDeskDao, times(1)).createCashDesk();
     }
 
     @Test
     public void getCashDesks_validRequest_daoObjectCalled() {
         var expected = new ArrayList<CashDeskDto>();
-        expected.add(new CashDeskDto(1L, 10.0));
-        expected.add(new CashDeskDto(2L, 20.0));
-        expected.add(new CashDeskDto(3L, 30.0));
+        expected.add(new CashDeskDto());
+        expected.add(new CashDeskDto());
+        expected.add(new CashDeskDto());
         when(cashDeskDao.findAllCashDesks()).thenReturn(expected);
         var actual = service.getCashDesks();
         assertEquals(expected, actual);
@@ -46,7 +44,7 @@ public class CashDeskServiceImplTest {
 
     @Test
     public void getCashDeskById_validRequest_daoObjectCalled() {
-        var expected = new CashDeskDto(1L, 10.0);
+        var expected = new CashDeskDto();
         when(cashDeskDao.findById(any())).thenReturn(expected);
         var actual = service.getCashDeskById(1L);
         assertEquals(expected, actual);

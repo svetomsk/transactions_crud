@@ -1,5 +1,8 @@
 package com.svetomsk.crudtransactions.enums;
 
 public enum TransferCurrency {
-    KGS
+    KGS,
+    USD,
+    EUR,
+    RUB
 }

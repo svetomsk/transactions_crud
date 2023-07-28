@@ -13,10 +13,10 @@ public class ReceiverPhonePredicate implements PredicateWithCondition<ListTransf
     @Override
     public Specification<TransferEntity> makeSpecification(ListTransfersRequest value) {
         UserDto receiver = value.getReceiver();
-        if (receiver == null || receiver.getPhoneNumber() == null) return null;
+        if (receiver == null || receiver.getPhone() == null) return null;
         return (root, criteriaQuery, builder) -> {
             Join<TransferEntity, UserEntity> joinUser = root.join("receiver");
-            return builder.equal(joinUser.get("phone"), receiver.getPhoneNumber());
+            return builder.equal(joinUser.get("phone"), receiver.getPhone());
         };
     }
 }

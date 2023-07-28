@@ -7,7 +7,7 @@ import java.util.List;
 
 @Service
 public interface CashDeskService {
-    CashDeskDto createCashDesk(CashDeskDto request);
+    CashDeskDto createCashDesk();
 
     List<CashDeskDto> getCashDesks();
 

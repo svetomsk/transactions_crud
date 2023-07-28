@@ -1,7 +1,6 @@
 package com.svetomsk.crudtransactions.controller.interfaces;
 
 import com.svetomsk.crudtransactions.dto.CashDeskDto;
-import jakarta.validation.Valid;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -13,8 +12,8 @@ import java.util.List;
 @RequestMapping("/cashDesk")
 @PreAuthorize("isAuthenticated()")
 public interface CashDeskController {
-    @PostMapping(value = "/create", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    ResponseEntity<CashDeskDto> createCashDesk(@RequestBody @Valid CashDeskDto request);
+    @PostMapping(value = "/create", produces = MediaType.APPLICATION_JSON_VALUE)
+    ResponseEntity<CashDeskDto> createCashDesk();
 
     @GetMapping("/list")
     ResponseEntity<List<CashDeskDto>> getAllCashDesks();

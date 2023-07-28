@@ -38,7 +38,7 @@ public class CashDeskControllerImplTest {
     @Test
     @WithMockUser
     public void createCashDesk_correctRequest_serviceCalled() throws Exception {
-        var request = new CashDeskDto(1L, 20.0);
+        var request = new CashDeskDto();
         when(cashDeskService.createCashDesk(any())).thenReturn(request);
         performRequest(mvc, post("/cashDesk/create")
                 .with(csrf())
@@ -52,7 +52,7 @@ public class CashDeskControllerImplTest {
     public void createCashDesk_noAuth_unauthorized() throws Exception {
         performRequest(mvc, post("/cashDesk/create")
                 .with(csrf())
-                .content(Utils.stringify(mapper, new CashDeskDto(1L, 1.0)))
+                .content(Utils.stringify(mapper, new CashDeskDto()))
                 .contentType(MediaType.APPLICATION_JSON_VALUE))
                 .andExpect(status().isUnauthorized());
     }
@@ -61,7 +61,7 @@ public class CashDeskControllerImplTest {
     @WithMockUser
     public void getCashDesks_correctRequest_serviceCalled() throws Exception {
         var serviceResult = new ArrayList<CashDeskDto>();
-        serviceResult.add(new CashDeskDto(1L, 10.0));
+        serviceResult.add(new CashDeskDto());
         when(cashDeskService.getCashDesks()).thenReturn(serviceResult);
         var mvcResult = performRequest(mvc, get("/cashDesk/list"))
                 .andExpect(status().isOk())
@@ -78,7 +78,7 @@ public class CashDeskControllerImplTest {
     @Test
     @WithMockUser
     public void getCashDeskById_correctRequest_entityReturned() throws Exception {
-        var serviceResult = new CashDeskDto(1L, 10.0);
+        var serviceResult = new CashDeskDto();
         when(cashDeskService.getCashDeskById(any())).thenReturn(serviceResult);
         var id = 1L;
         performRequest(mvc, get("/cashDesk/" + id))

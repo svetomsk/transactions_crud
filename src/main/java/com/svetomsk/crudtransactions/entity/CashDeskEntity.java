@@ -21,17 +21,12 @@ public class CashDeskEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
-    private Double balance;
-
     @CreationTimestamp
     private LocalDateTime createAt;
 
     @UpdateTimestamp
     private LocalDateTime updatedAt;
 
+    @Builder.Default
     private boolean enabled = true;
-
-    @Version
-    private long version;
 }

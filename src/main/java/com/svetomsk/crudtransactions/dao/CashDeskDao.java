@@ -1,11 +1,11 @@
 package com.svetomsk.crudtransactions.dao;
 
-import com.svetomsk.crudtransactions.components.DtoMapper;
 import com.svetomsk.crudtransactions.dto.CashDeskDto;
 import com.svetomsk.crudtransactions.entity.CashDeskEntity;
 import com.svetomsk.crudtransactions.repository.CashDeskRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,19 +18,20 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class CashDeskDao {
     private final CashDeskRepository repository;
-    private final DtoMapper dtoMapper;
+    private final ModelMapper modelMapper;
 
-    public CashDeskDto save(CashDeskDto request) {
-        var entity = CashDeskEntity.builder()
-                .balance(request.getBalance())
-                .build();
-        return dtoMapper.toDto(repository.save(entity));
+    public CashDeskDto createCashDesk() {
+        return modelMapper.map(repository.save(new CashDeskEntity()), CashDeskDto.class);
+    }
+
+    public CashDeskEntity saveEntity(CashDeskDto cashDeskDto) {
+        return repository.save(modelMapper.map(cashDeskDto, CashDeskEntity.class));
     }
 
     public List<CashDeskDto> findAllCashDesks() {
         return repository.findAll()
                 .stream()
-                .map(dtoMapper::toDto)
+                .map(value -> modelMapper.map(value, CashDeskDto.class))
                 .collect(Collectors.toList());
     }
 
@@ -40,23 +41,14 @@ public class CashDeskDao {
     }
 
     public CashDeskDto findById(Long id) {
-        return dtoMapper.toDto(findEntityById(id));
+        return modelMapper.map(findEntityById(id), CashDeskDto.class);
     }
 
-    @Transactional
-    public void findAndWithdraw(Long id, double amount) {
-        var entity = findEntityById(id);
-        if (entity.getBalance() < amount) {
-            throw new IllegalArgumentException("Not enough money to withdraw from cash desk " + entity.getId());
-        }
-        entity.setBalance(entity.getBalance() - amount);
-        repository.save(entity);
-    }
 
     @Transactional
     public CashDeskEntity findAndDeposit(Long entityId, Double amount) {
         CashDeskEntity entity = findEntityById(entityId);
-        entity.setBalance(entity.getBalance() + amount);
+//        entity.setBalance(entity.getBalance() + amount);
         return repository.save(entity);
     }
 

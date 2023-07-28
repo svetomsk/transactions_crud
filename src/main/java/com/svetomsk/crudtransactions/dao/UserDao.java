@@ -17,20 +17,20 @@ public class UserDao {
     private final UserRepository repository;
 
     public UserEntity findByInfoOrCreate(UserDto userDto) {
-        Optional<UserEntity> maybeUser = repository.findByPhone(userDto.getPhoneNumber());
+        Optional<UserEntity> maybeUser = repository.findByPhone(userDto.getPhone());
         return maybeUser.orElseGet(() -> createNewUsers(userDto));
     }
 
     private UserEntity createNewUsers(UserDto userDto) {
         UserEntity entity = UserEntity.builder()
-                .phone(userDto.getPhoneNumber())
+                .phone(userDto.getPhone())
                 .name(userDto.getName())
                 .build();
         try {
             return repository.save(entity);
         } catch (DataIntegrityViolationException exc) {
             log.info("User already exists");
-            return repository.findByPhone(userDto.getPhoneNumber()).get();
+            return repository.findByPhone(userDto.getPhone()).get();
         }
     }
 

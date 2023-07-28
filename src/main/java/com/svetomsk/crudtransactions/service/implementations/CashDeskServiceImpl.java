@@ -1,10 +1,13 @@
 package com.svetomsk.crudtransactions.service.implementations;
 
+import com.svetomsk.crudtransactions.dao.CashDeskAccountDao;
 import com.svetomsk.crudtransactions.dao.CashDeskDao;
+import com.svetomsk.crudtransactions.dto.CashDeskAccountDto;
 import com.svetomsk.crudtransactions.dto.CashDeskDto;
-import com.svetomsk.crudtransactions.model.CreateCashDeskRequest;
+import com.svetomsk.crudtransactions.entity.CashDeskEntity;
 import com.svetomsk.crudtransactions.service.interfaces.CashDeskService;
 import lombok.RequiredArgsConstructor;
+import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -13,9 +16,11 @@ import java.util.List;
 @RequiredArgsConstructor
 public class CashDeskServiceImpl implements CashDeskService {
     private final CashDeskDao cashDeskDao;
+    private final CashDeskAccountDao accountDao;
+    private final ModelMapper modelMapper;
     @Override
-    public CashDeskDto createCashDesk(CashDeskDto request) {
-        return cashDeskDao.save(request);
+    public CashDeskDto createCashDesk() {
+        return cashDeskDao.createCashDesk();
     }
 
     @Override
@@ -25,6 +30,13 @@ public class CashDeskServiceImpl implements CashDeskService {
 
     @Override
     public CashDeskDto getCashDeskById(Long id) {
-        return cashDeskDao.findById(id);
+        CashDeskEntity cashDesk = cashDeskDao.findEntityById(id);
+        List<CashDeskAccountDto> accounts = accountDao.findAllByCashDesk(cashDesk)
+                .stream()
+                .map(value -> modelMapper.map(value, CashDeskAccountDto.class))
+                .toList();
+        CashDeskDto cashDeskDto = modelMapper.map(cashDesk, CashDeskDto.class);
+        cashDeskDto.setAccounts(accounts);
+        return cashDeskDto;
     }
 }

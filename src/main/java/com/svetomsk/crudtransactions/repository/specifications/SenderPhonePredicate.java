@@ -11,8 +11,8 @@ import org.springframework.stereotype.Component;
 public class SenderPhonePredicate implements PredicateWithCondition<ListTransfersRequest, TransferEntity> {
     @Override
     public Specification<TransferEntity> makeSpecification(ListTransfersRequest value) {
-        if (value.getSender() == null || value.getSender().getPhoneNumber() == null) return null;
-        String phone = value.getSender().getPhoneNumber();
+        if (value.getSender() == null || value.getSender().getPhone() == null) return null;
+        String phone = value.getSender().getPhone();
         return (root, criteriaQuery, builder) -> {
             Join<TransferEntity, UserEntity> joinUser = root.join("sender");
             return builder.equal(joinUser.get("phone"), phone);
