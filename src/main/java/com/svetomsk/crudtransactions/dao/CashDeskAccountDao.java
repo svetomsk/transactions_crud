@@ -32,7 +32,7 @@ public class CashDeskAccountDao {
                 new NoSuchElementException("Account is not found for cash desk " + cashDesk.getId() + " " +
                         "with currency " + currency));
         if (entity.getBalance() < amount) {
-            throw new IllegalArgumentException("Not enough balance withdraw on account " + entity.getId());
+            throw new IllegalArgumentException("Not enough balance to withdraw on account " + entity.getId());
         }
         entity.setBalance(entity.getBalance() - amount);
         repository.save(entity);

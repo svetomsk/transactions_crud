@@ -27,6 +27,9 @@ public class CashDeskAccountEntity {
 
     private Double balance;
 
+    @Builder.Default
+    private boolean enabled = true;
+
     @Version
     private long version;
 }
